@@ -1,4 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
+import { invoke } from '@tauri-apps/api/core'
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 
 const versionString =
   import.meta.env.MODE === 'development' ? `${import.meta.env.VITE_APP_VERSION}-dev` : import.meta.env.VITE_APP_VERSION
@@ -45,6 +47,10 @@ export const useStore = defineStore('main', {
       if (idx >= 0) this.reminders[idx] = next
       else this.reminders.push(next)
       localStorage.setItem('reminders', JSON.stringify(this.reminders))
+      
+      // Start background timer for this reminder
+      this.startReminderTimer(next)
+      
       return id
     },
     showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -64,7 +70,68 @@ export const useStore = defineStore('main', {
       if (raw) {
         try {
           this.reminders = JSON.parse(raw)
+          // Start timers for all undelivered reminders
+          this.reminders.forEach(reminder => {
+            if (!reminder.delivered) {
+              this.startReminderTimer(reminder)
+            }
+          })
         } catch {}
+      }
+    },
+    deleteReminder(id: string) {
+      this.reminders = this.reminders.filter(r => r.id !== id)
+      localStorage.setItem('reminders', JSON.stringify(this.reminders))
+    },
+    startReminderTimer(reminder: { id: string; title: string; datetimeIso: string; delivered: boolean }) {
+      const reminderTime = new Date(reminder.datetimeIso).getTime()
+      const now = Date.now()
+      const delay = reminderTime - now
+      
+      if (delay > 0) {
+        setTimeout(async () => {
+          try {
+            // Use Tauri notification
+            let permissionGranted = await isPermissionGranted()
+            
+            if (!permissionGranted) {
+              const permission = await requestPermission()
+              permissionGranted = permission === 'granted'
+            }
+            
+            if (permissionGranted) {
+              await sendNotification({ 
+                title: 'یادآور', 
+                body: reminder.title 
+              })
+            } else {
+              // Fallback to browser notification
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('یادآور', {
+                  body: reminder.title,
+                  icon: '/favicon.ico'
+                })
+              } else if ('Notification' in window && Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission()
+                if (permission === 'granted') {
+                  new Notification('یادآور', {
+                    body: reminder.title,
+                    icon: '/favicon.ico'
+                  })
+                }
+              }
+            }
+            
+            // Mark as delivered
+            const idx = this.reminders.findIndex(r => r.id === reminder.id)
+            if (idx >= 0) {
+              this.reminders[idx].delivered = true
+              localStorage.setItem('reminders', JSON.stringify(this.reminders))
+            }
+          } catch (error) {
+            console.error('Failed to send notification:', error)
+          }
+        }, delay)
       }
     },
   },

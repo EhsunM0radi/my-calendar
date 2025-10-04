@@ -11,6 +11,7 @@ declare module 'vue' {
     DateTriView: typeof import('./src/components/DateTriView.vue')['default']
     GreetComponent: typeof import('./src/components/GreetComponent.vue')['default']
     ReminderForm: typeof import('./src/components/ReminderForm.vue')['default']
+    ReminderList: typeof import('./src/components/ReminderList.vue')['default']
     ThemeToggle: typeof import('./src/components/ThemeToggle.vue')['default']
   }
 }
