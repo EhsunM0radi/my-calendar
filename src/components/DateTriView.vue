@@ -20,6 +20,14 @@ const selectedCalendar = computed({
 })
 
 const equivalents = computed(() => toAllCalendars(selectedDate.value))
+// Week days based on calendar type
+const weekDays = computed(() => {
+  if (selectedCalendar.value === 'gregorian') {
+    return ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] // Sunday to Saturday
+  } else {
+    return ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] // Saturday to Friday for Persian/Islamic
+  }
+})
 
 // Calendar month view
 const currentMonth = ref(dayjs())
@@ -29,10 +37,14 @@ const monthDays = computed(() => {
   const start = currentMonth.value.startOf('month')
   const end = currentMonth.value.endOf('month')
   const days = []
-  
+  // For Persian/Islamic calendars, start week from Saturday (day 6)
+  // For Gregorian, start from Sunday (day 0)
+  const weekStartDay = selectedCalendar.value === 'gregorian' ? 0 : 6
+    
   // Add previous month's trailing days
   const startDay = start.day()
-  for (let i = startDay - 1; i >= 0; i--) {
+  const daysToAdd = (startDay - weekStartDay + 7) % 7
+  for (let i = daysToAdd - 1; i >= 0; i--) {
     days.push(start.subtract(i + 1, 'day'))
   }
   
@@ -114,7 +126,7 @@ function isCurrentMonth(day: dayjs.Dayjs) {
 
       <!-- Week Days Header -->
       <div class="grid grid-cols-7 gap-1 mb-2">
-        <div v-for="day in ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']" :key="day" 
+        <div v-for="day in weekDays" :key="day"  
              class="text-center text-sm font-medium text-gray-500 py-2">
           {{ day }}
         </div>

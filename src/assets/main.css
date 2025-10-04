@@ -21,7 +21,7 @@
 }
 
 html {
-  @apply text-[14px] text-gray-200 bg-gray-800;
+  @apply text-[14px] text-gray-800 bg-white;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -29,8 +29,45 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  @apply bg-gray-700 text-gray-100 border-gray-600;
+}
+
+html.dark button {
+  @apply text-gray-100;
+}
+
+html.dark .border {
+  @apply border-gray-600;
+}
+
 html.dark {
   @apply text-gray-100 bg-gray-900;
+}
+
+/* Force dark mode styles */
+.dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  @apply bg-gray-700 text-gray-100 border-gray-600;
+}
+
+.dark button {
+  @apply text-gray-100;
+}
+
+.dark .border {
+  @apply border-gray-600;
 }
 
 a,
