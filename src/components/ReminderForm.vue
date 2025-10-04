@@ -5,23 +5,22 @@ const date = ref('')
 const time = ref('')
 
 async function createReminder() {
+  console.log('Creating reminder', title.value, date.value, time.value)
   if (!title.value || !date.value || !time.value) return
   const whenLocal = new Date(`${date.value}T${time.value}:00`)
   const id = store.upsertReminder({ title: title.value, datetimeIso: whenLocal.toISOString() })
   
-  // Schedule OS notification
+  // Send immediate notification (Tauri notification plugin doesn't support scheduled notifications)
   try {
-    const { schedule } = await import('@tauri-apps/plugin-notification')
-    await schedule({
-      identifier: id,
-      title: 'یادآور',
-      body: title.value,
-      schedule: { at: whenLocal },
+    const { sendNotification } = await import('@tauri-apps/plugin-notification')
+    await sendNotification({
+      title: 'یادآور ایجاد شد',
+      body: `${title.value} - ${whenLocal.toLocaleString('fa-IR')}`,
     })
     store.showToast('یادآور با موفقیت ایجاد شد!')
   } catch (e) {
-    console.error('Failed to schedule notification', e)
-    store.showToast('یادآور ایجاد شد اما اعلان زمان‌بندی نشد', 'error')
+    console.error('Failed to send notification', e)
+    store.showToast('یادآور ایجاد شد اما اعلان ارسال نشد', 'error')
   }
   
   title.value = ''
@@ -39,7 +38,7 @@ async function createReminder() {
       <input v-model="time" type="time" class="border rounded px-2 py-1 bg-transparent" />
     </div>
     <button class="px-3 py-2 rounded bg-black text-white dark:bg-white dark:text-black" @click="createReminder">ذخیره</button>
-    <div class="text-xs opacity-70">اعلان سیستم در زمان مشخص‌شده ارسال می‌شود.</div>
+    <div class="text-xs opacity-70">اعلان فوری ارسال می‌شود.</div>
   </div>
 </template>
 

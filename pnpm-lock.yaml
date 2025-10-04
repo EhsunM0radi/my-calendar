@@ -26,6 +26,9 @@ importers:
       dayjs:
         specifier: ^1.11.18
         version: 1.11.18
+      hijri-converter:
+        specifier: ^1.1.1
+        version: 1.1.1
       jalaliday:
         specifier: ^3.1.1
         version: 3.1.1(dayjs@1.11.18)
@@ -2018,6 +2021,9 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  hijri-converter@1.1.1:
+    resolution: {integrity: sha512-uY2oDZllg7wcgvY7rdrM1VUE5iEqNjKGtrBUJlzniAsY73FuC5mb0kzdqLE/bU9Q50Iwhn6b9/Udw8SUIXHlhQ==}
 
   hmac-drbg@1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
@@ -5360,6 +5366,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  hijri-converter@1.1.1: {}
 
   hmac-drbg@1.0.1:
     dependencies:
