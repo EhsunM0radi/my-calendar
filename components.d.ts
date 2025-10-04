@@ -8,6 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    DateTriView: typeof import('./src/components/DateTriView.vue')['default']
     GreetComponent: typeof import('./src/components/GreetComponent.vue')['default']
+    ReminderForm: typeof import('./src/components/ReminderForm.vue')['default']
+    ThemeToggle: typeof import('./src/components/ThemeToggle.vue')['default']
   }
 }

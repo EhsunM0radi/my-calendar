@@ -1,26 +1,21 @@
 <script setup lang="ts">
-import GreetComponent from './components/GreetComponent.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import DateTriView from '@/components/DateTriView.vue'
+import ReminderForm from '@/components/ReminderForm.vue'
 const store = useStore()
 store.initApp()
+store.loadReminders()
+store.setTheme(store.theme)
 </script>
 
 <template>
-  <main class="flex-1 flex flex-col items-center justify-center min-h-screen">
-    <h1>Welcome to Tauri 2 + Vue</h1>
+  <main class="min-h-screen flex flex-col items-center px-4 py-6 gap-6 bg-white text-black dark:bg-neutral-900 dark:text-neutral-100">
+    <header class="w-full max-w-3xl flex items-center justify-between">
+      <h1 class="text-lg font-semibold">تقویم من</h1>
+      <ThemeToggle />
+    </header>
 
-    <div class="flex flex-row">
-      <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
-    </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <GreetComponent />
+    <DateTriView />
+    <ReminderForm />
   </main>
 </template>

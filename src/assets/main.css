@@ -29,6 +29,10 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+html.dark {
+  @apply text-gray-100 bg-gray-900;
+}
+
 a,
 button {
   @apply cursor-default select-none;
