@@ -19,8 +19,8 @@ type CalendarKind = 'gregorian' | 'jalali' | 'islamic'
 // نام روزهای هفته - از دوشنبه تا یکشنبه برای میلادی، از شنبه تا جمعه برای فارسی
 const weekDays = {
   gregorian: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  jalali: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
-  islamic: ['س', 'ا', 'ث', 'ث', 'ا', 'خ', 'ج', 'س'] // شنبه تا جمعه
+  jalali: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'],
+  islamic: ['السَبت', 'الأحد', 'الإثنَیْن', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'] // شنبه تا جمعه
 }
 
 const jalaliMonthNames = [
@@ -139,9 +139,20 @@ const monthDays = computed(() => {
     const jYear = jCurrent.jYear()
     const jMonth = jCurrent.jMonth()
     
-    // اولین روز ماه جلالی
-    const firstDay = momentJalaali(`${jYear}-${jMonth + 1}-01`, 'jYYYY-jM-jD')
-    const daysInMonth = firstDay.jDaysInMonth()
+    // اولین روز ماه جلالی - روش دیگر
+    const firstDay = momentJalaali(currentMonth.value).jDate(1)
+    
+    // دریافت تعداد روزهای ماه
+    let daysInMonth: number
+    if (jMonth < 6) {
+      daysInMonth = 31 // 6 ماه اول
+    } else if (jMonth < 11) {
+      daysInMonth = 30 // 5 ماه بعدی
+    } else {
+      // اسفند - چک کردن کبیسه بودن
+      const isLeap = momentJalaali.jIsLeapYear(jYear)
+      daysInMonth = isLeap ? 30 : 29
+    }
     
     // روز اول ماه چه روزی از هفته است
     // 0=یکشنبه تا 6=شنبه در JS، ما میخوایم شنبه=0
@@ -159,7 +170,7 @@ const monthDays = computed(() => {
     
     // روزهای ماه جاری
     for (let i = 1; i <= daysInMonth; i++) {
-      const day = momentJalaali(`${jYear}-${jMonth + 1}-${i}`, 'jYYYY-jM-jD')
+      const day = momentJalaali(currentMonth.value).jYear(jYear).jMonth(jMonth).jDate(i)
       days.push({ 
         date: day.toDate(), 
         isCurrentMonth: true,
