@@ -61,18 +61,18 @@ watch(() => selectedDate.value, (newDate) => {
 })
 
 // محاسبه تاریخ‌های معادل
-const equivalents = computed(() => {
-  const date = new Date(selectedDate.value)
-  const mGreg = new Date(date)
-  const mJal = momentJalaali(date)
-  const mHij = momentHijri(date)
+// const equivalents = computed(() => {
+//   const date = new Date(selectedDate.value)
+//   const mGreg = new Date(date)
+//   const mJal = momentJalaali(date)
+//   const mHij = momentHijri(date)
 
-  return {
-    gregorian: mGreg.toISOString().split('T')[0],
-    jalali: mJal.format('jYYYY-jMM-jDD'),
-    islamic: mHij.format('iYYYY-iMM-iDD')
-  }
-})
+//   return {
+//     gregorian: mGreg.toISOString().split('T')[0],
+//     jalali: mJal.format('jYYYY-jMM-jDD'),
+//     islamic: mHij.format('iYYYY-iMM-iDD')
+//   }
+// })
 
 // نمایش نام ماه و سال
 const monthYearDisplay = computed(() => {
@@ -301,7 +301,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">نوع تقویم:</label>
         <select
           v-model="selectedCalendar"
-          class="border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 outline-none transition-all duration-200 font-medium"
+          class="border border-gray-300 dark:border-gray-500 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 outline-none transition-all duration-200 font-medium"
         >
           <option v-for="c in calendars" :key="c.key" :value="c.key">
             {{ c.label }}
@@ -309,7 +309,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
         </select>
       </div>
       <button
-        class="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+        class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
         @click="onToday"
       >
         امروز
@@ -317,12 +317,12 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
     </div>
 
     <!-- نمایش تقویم -->
-    <div class="border rounded-lg p-4 dark:border-gray-700 dark:bg-gray-800" :dir="isRTL ? 'rtl' : 'ltr'">
+    <div class="w-full border border-gray-300 rounded-xl p-4 dark:border-gray-700 dark:bg-gray-800" :dir="isRTL ? 'rtl' : 'ltr'">
       <!-- هدر ماه -->
       <div class="flex items-center justify-between mb-4">
         <button
           @click="changeMonth(-1)"
-          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
           <
         </button>
@@ -331,7 +331,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
         </h3>
         <button
           @click="changeMonth(1)"
-          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
           >
         </button>
@@ -355,7 +355,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
           :key="index"
           @click="selectDay(dayObj.date)"
           :class="[
-            'p-2 text-sm rounded transition-colors',
+            'p-2 text-sm rounded-lg transition-colors',
             isSelected(dayObj.date) ? 'bg-blue-500 text-white font-bold' : '',
             isToday(dayObj.date) && !isSelected(dayObj.date) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium' : '',
             !dayObj.isCurrentMonth ? 'text-gray-400' : '',
@@ -364,24 +364,6 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
         >
           {{ dayObj.displayDay }}
         </button>
-      </div>
-    </div>
-
-    <!-- نمایش تاریخ‌های معادل -->
-    <div class="rounded border p-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-      <div class="grid grid-cols-1 gap-2">
-        <div class="flex justify-between">
-          <span class="font-medium">میلادی:</span>
-          <span class="font-mono" dir="ltr">{{ equivalents.gregorian }}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="font-medium">جلالی (شمسی):</span>
-          <span class="font-mono" dir="ltr">{{ equivalents.jalali }}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="font-medium">قمری:</span>
-          <span class="font-mono" dir="ltr">{{ equivalents.islamic }}</span>
-        </div>
       </div>
     </div>
   </div>

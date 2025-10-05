@@ -15,6 +15,7 @@ const showSettings = ref(false)
 
 // Request notification permission
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
+import ConvertedDates from './components/ConvertedDates.vue'
 
 async function requestNotificationPermission() {
   try {
@@ -84,7 +85,8 @@ requestNotificationPermission()
       </div>
 
       <!-- Reminder Form -->
-      <div class="flex justify-center items-start backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-2xl p-6 shadow-xl border border-gray-200/50 dark:border-700/50">
+      <div class="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-2xl p-6 shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <ConvertedDates class="mb-4" />
         <ReminderForm />
       </div>
     </div>
