@@ -92,6 +92,13 @@ export const useStore = defineStore('main', {
       if (raw) {
         try {
           this.reminders = JSON.parse(raw)
+
+          // پاک کردن یادآورهای ارسال شده که بیش از یک ماه از آنها گذشته
+          this.cleanupOldReminders()
+
+          // بررسی یادآورهای گذشته و ارسال نوتیف برای آنها
+          this.checkMissedReminders()
+
           // Start timers for all undelivered reminders
           this.reminders.forEach(reminder => {
             if (!reminder.delivered) {
@@ -104,6 +111,120 @@ export const useStore = defineStore('main', {
     deleteReminder(id: string) {
       this.reminders = this.reminders.filter(r => r.id !== id)
       localStorage.setItem('reminders', JSON.stringify(this.reminders))
+    },
+    cleanupOldReminders() {
+      const oneMonthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000) // 30 روز قبل
+
+      const before = this.reminders.length
+      this.reminders = this.reminders.filter(reminder => {
+        // فقط یادآورهای ارسال شده که بیش از یک ماه از آنها گذشته را حذف کن
+        if (reminder.delivered) {
+          const reminderTime = new Date(reminder.datetimeIso).getTime()
+          return reminderTime > oneMonthAgo
+        }
+        return true // یادآورهای ارسال نشده را نگه دار
+      })
+
+      if (before !== this.reminders.length) {
+        localStorage.setItem('reminders', JSON.stringify(this.reminders))
+        console.log(`پاکسازی: ${before - this.reminders.length} یادآور قدیمی حذف شد`)
+      }
+    },
+    async checkMissedReminders() {
+      const now = Date.now()
+      const missedReminders = this.reminders.filter(reminder => {
+        if (!reminder.delivered) {
+          const reminderTime = new Date(reminder.datetimeIso).getTime()
+          return reminderTime < now // زمان یادآور گذشته است
+        }
+        return false
+      })
+
+      if (missedReminders.length > 0) {
+        console.log(`${missedReminders.length} یادآور از دست رفته یافت شد`)
+
+        for (const reminder of missedReminders) {
+          await this.sendMissedNotification(reminder)
+        }
+      }
+    },
+    async sendMissedNotification(reminder: { id: string; title: string; datetimeIso: string; delivered: boolean }) {
+      try {
+        const reminderTime = new Date(reminder.datetimeIso).getTime()
+        const now = Date.now()
+        const diffMs = now - reminderTime
+
+        // محاسبه زمان گذشته
+        const hours = Math.floor(diffMs / (1000 * 60 * 60))
+        const days = Math.floor(hours / 24)
+
+        let timeAgoText = ''
+        if (days > 0) {
+          timeAgoText = `${days} روز پیش`
+        } else if (hours > 0) {
+          timeAgoText = `${hours} ساعت پیش`
+        } else {
+          const minutes = Math.floor(diffMs / (1000 * 60))
+          timeAgoText = `${minutes} دقیقه پیش`
+        }
+
+        const notificationBody = `⏰ ${timeAgoText}\n${reminder.title}`
+
+        const isDev = import.meta.env.MODE === 'development'
+
+        if (isDev || !window.__TAURI__) {
+          // Browser Notification
+          if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+              new Notification('🔔 یادآور از دست رفته - تقویم من', {
+                body: notificationBody,
+                icon: '/logo.png',
+                badge: '/logo.png',
+                tag: reminder.id,
+                requireInteraction: true,
+                silent: false
+              })
+            } else if (Notification.permission !== 'denied') {
+              const permission = await Notification.requestPermission()
+              if (permission === 'granted') {
+                new Notification('🔔 یادآور از دست رفته - تقویم من', {
+                  body: notificationBody,
+                  icon: '/logo.png',
+                  badge: '/logo.png',
+                  tag: reminder.id,
+                  requireInteraction: true,
+                  silent: false
+                })
+              }
+            }
+          }
+        } else {
+          // Tauri Notification
+          let permissionGranted = await isPermissionGranted()
+
+          if (!permissionGranted) {
+            const permission = await requestPermission()
+            permissionGranted = permission === 'granted'
+          }
+
+          if (permissionGranted) {
+            await sendNotification({
+              title: '🔔 یادآور از دست رفته - تقویم من',
+              body: notificationBody,
+              icon: 'icons/icon.png'
+            })
+          }
+        }
+
+        // Mark as delivered
+        const idx = this.reminders.findIndex(r => r.id === reminder.id)
+        if (idx >= 0) {
+          this.reminders[idx].delivered = true
+          localStorage.setItem('reminders', JSON.stringify(this.reminders))
+        }
+      } catch (error) {
+        console.error('Failed to send missed notification:', error)
+      }
     },
     async startReminderTimer(reminder: { id: string; title: string; datetimeIso: string; delivered: boolean }) {
       const reminderTime = new Date(reminder.datetimeIso).getTime()
