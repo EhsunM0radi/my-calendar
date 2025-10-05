@@ -13,7 +13,7 @@ export const useStore = defineStore('main', {
     name: '',
     theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
     selectedDateIso: new Date().toISOString(),
-    selectedCalendar: 'gregorian' as 'gregorian' | 'jalali' | 'islamic',
+    selectedCalendar: (localStorage.getItem('selectedCalendar') as 'gregorian' | 'jalali' | 'islamic') || 'jalali',
     reminders: [] as Array<{ id: string; title: string; datetimeIso: string; delivered: boolean }>,
   }),
 
@@ -39,6 +39,7 @@ export const useStore = defineStore('main', {
     },
     setSelectedCalendar(kind: 'gregorian' | 'jalali' | 'islamic') {
       this.selectedCalendar = kind
+      localStorage.setItem('selectedCalendar', kind)
     },
     upsertReminder(rem: { id?: string; title: string; datetimeIso: string }) {
       const id = rem.id ?? crypto.randomUUID()

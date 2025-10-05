@@ -40,8 +40,21 @@ const equivalents = computed(() => {
 
   return {
     gregorian: mGreg.toISOString().split('T')[0],
-    jalali: mJal.format('jYYYY-jMM-jDD'),
-    islamic: mHij.format('iYYYY-iMM-iDD')
+    jalali: formatPersianDate(mJal.format('jYYYY-jMM-jDD')),
+    islamic: formatPersianDate(mHij.format('iYYYY-iMM-iDD'))
   }
 })
+
+function formatPersianDate(dateString: string) {
+  const parts = dateString.split('-')
+  const year = convertToPersianDigits(parseInt(parts[0]))
+  const month = convertToPersianDigits(parseInt(parts[1]))
+  const day = convertToPersianDigits(parseInt(parts[2]))
+  return `${year}/${month}/${day}`
+}
+
+function convertToPersianDigits(num: number) {
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+  return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('')
+}
 </script>

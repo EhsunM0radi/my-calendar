@@ -8,6 +8,11 @@ momentJalaali.loadPersian({ usePersianDigits: false })
 
 const store = useStore()
 
+// Set default calendar to 'jalali' if not already set
+if (!store.selectedCalendar) {
+  store.setSelectedCalendar('jalali')
+}
+
 const calendars = [
   { key: 'gregorian', label: 'میلادی' },
   { key: 'jalali', label: 'جلالی (شمسی)' },
@@ -80,10 +85,10 @@ const monthYearDisplay = computed(() => {
     return `${gregorianMonthNames[currentMonth.value.getMonth()]} ${currentMonth.value.getFullYear()}`
   } else if (selectedCalendar.value === 'jalali') {
     const jDate = momentJalaali(currentMonth.value)
-    return `${jalaliMonthNames[jDate.jMonth()]} ${jDate.jYear()}`
+    return `${jalaliMonthNames[jDate.jMonth()]} ${convertToPersianDigits(jDate.jYear())}`
   } else {
     const iDate = momentHijri(currentMonth.value)
-    return `${hijriMonthNames[iDate.iMonth()]} ${iDate.iYear()}`
+    return `${hijriMonthNames[iDate.iMonth()]} ${convertToPersianDigits(iDate.iYear())}`
   }
 })
 
@@ -108,7 +113,7 @@ const monthDays = computed(() => {
       days.push({
         date: prevDay,
         isCurrentMonth: false,
-        displayDay: prevDay.getDate()
+        displayDay: selectedCalendar.value === 'gregorian' ? prevDay.getDate() : convertToPersianDigits(prevDay.getDate())
       })
     }
 
@@ -118,18 +123,19 @@ const monthDays = computed(() => {
       days.push({
         date: day,
         isCurrentMonth: true,
-        displayDay: i
+        displayDay: selectedCalendar.value === 'gregorian' ? i : convertToPersianDigits(i)
       })
     }
 
     // روزهای ماه بعد
-    const remainingDays = 42 - days.length
+    const totalDays = days.length
+    const remainingDays = (7 - (totalDays % 7)) % 7 // Days to complete the last week
     for (let i = 1; i <= remainingDays; i++) {
       const nextDay = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, i)
       days.push({
         date: nextDay,
         isCurrentMonth: false,
-        displayDay: i
+        displayDay: selectedCalendar.value === 'gregorian' ? i : convertToPersianDigits(i)
       })
     }
 
@@ -164,7 +170,7 @@ const monthDays = computed(() => {
       days.push({
         date: prevDay.toDate(),
         isCurrentMonth: false,
-        displayDay: prevDay.jDate()
+        displayDay: convertToPersianDigits(prevDay.jDate())
       })
     }
 
@@ -174,18 +180,19 @@ const monthDays = computed(() => {
       days.push({
         date: day.toDate(),
         isCurrentMonth: true,
-        displayDay: i
+        displayDay: convertToPersianDigits(i)
       })
     }
 
     // روزهای ماه بعد
-    const remainingDays = 42 - days.length
-    for (let i = 1; i <= remainingDays; i++) {
+    const totalDaysJalali = days.length
+    const remainingDaysJalali = (7 - (totalDaysJalali % 7)) % 7
+    for (let i = 1; i <= remainingDaysJalali; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
       days.push({
         date: nextDay.toDate(),
         isCurrentMonth: false,
-        displayDay: nextDay.jDate()
+        displayDay: convertToPersianDigits(nextDay.jDate())
       })
     }
 
@@ -213,7 +220,7 @@ const monthDays = computed(() => {
       days.push({
         date: prevDay.toDate(),
         isCurrentMonth: false,
-        displayDay: prevDay.iDate()
+        displayDay: convertToPersianDigits(prevDay.iDate())
       })
     }
 
@@ -226,18 +233,19 @@ const monthDays = computed(() => {
       days.push({
         date: day.toDate(),
         isCurrentMonth: true,
-        displayDay: i
+        displayDay: convertToPersianDigits(i)
       })
     }
 
     // روزهای ماه بعد
-    const remainingDays = 42 - days.length
-    for (let i = 1; i <= remainingDays; i++) {
+    const totalDaysIslamic = days.length
+    const remainingDaysIslamic = (7 - (totalDaysIslamic % 7)) % 7
+    for (let i = 1; i <= remainingDaysIslamic; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
       days.push({
         date: nextDay.toDate(),
         isCurrentMonth: false,
-        displayDay: nextDay.iDate()
+        displayDay: convertToPersianDigits(nextDay.iDate())
       })
     }
   }
@@ -289,6 +297,11 @@ function isSelected(date: Date) {
 }
 
 const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
+
+function convertToPersianDigits(num: number) {
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+  return num.toString().split('').map(digit => persianDigits[parseInt(digit)] || digit).join('')
+}
 </script>
 
 <template>
@@ -299,14 +312,28 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">نوع تقویم:</label>
-        <select
-          v-model="selectedCalendar"
-          class="border border-gray-300 dark:border-gray-500 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 outline-none transition-all duration-200 font-medium"
-        >
-          <option v-for="c in calendars" :key="c.key" :value="c.key">
+        <div class="inline-flex rounded-xl shadow-sm border border-gray-300 dark:border-gray-500 overflow-hidden">
+          <button
+            v-for="(c, index) in calendars"
+            :key="c.key"
+            @click="selectedCalendar = c.key"
+            :class="[
+              'px-4 py-2 text-sm font-medium transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-700',
+              c.key === selectedCalendar
+                ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700'
+                : 'bg-white text-gray-900 hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600',
+              // Conditional border for separators
+              isRTL
+                ? (index !== calendars.length - 1 ? 'border-r border-gray-300 dark:border-gray-500' : '')
+                : (index !== 0 ? 'border-l border-gray-300 dark:border-gray-500' : ''),
+              // No individual rounding on buttons, parent div handles it
+              'rounded-none'
+            ]"
+          >
             {{ c.label }}
-          </option>
-        </select>
+          </button>
+        </div>
       </div>
       <button
         class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
