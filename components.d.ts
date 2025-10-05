@@ -12,6 +12,7 @@ declare module 'vue' {
     GreetComponent: typeof import('./src/components/GreetComponent.vue')['default']
     ReminderForm: typeof import('./src/components/ReminderForm.vue')['default']
     ReminderList: typeof import('./src/components/ReminderList.vue')['default']
+    SettingsModal: typeof import('./src/components/SettingsModal.vue')['default']
     ThemeToggle: typeof import('./src/components/ThemeToggle.vue')['default']
   }
 }

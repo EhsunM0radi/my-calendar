@@ -47,22 +47,43 @@ export const useStore = defineStore('main', {
       if (idx >= 0) this.reminders[idx] = next
       else this.reminders.push(next)
       localStorage.setItem('reminders', JSON.stringify(this.reminders))
-      
+
       // Start background timer for this reminder
       this.startReminderTimer(next)
-      
+
       return id
     },
     showToast(message: string, type: 'success' | 'error' = 'success') {
-      // Simple toast implementation
+      // Enhanced toast implementation
       const toast = document.createElement('div')
-      toast.className = `fixed top-4 right-4 px-4 py-2 rounded text-white z-50 ${
-        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      toast.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-2xl text-white z-[9999] shadow-2xl backdrop-blur-sm transition-all duration-300 ${
+        type === 'success'
+          ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+          : 'bg-gradient-to-r from-red-500 to-rose-500'
       }`
-      toast.textContent = message
+
+      const icon = type === 'success' ? '✓' : '✕'
+      toast.innerHTML = `
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">${icon}</span>
+          <span class="font-medium">${message}</span>
+        </div>
+      `
+
       document.body.appendChild(toast)
+
+      // Animate in
       setTimeout(() => {
-        document.body.removeChild(toast)
+        toast.style.transform = 'translate(-50%, 0)'
+      }, 10)
+
+      // Animate out and remove
+      setTimeout(() => {
+        toast.style.opacity = '0'
+        toast.style.transform = 'translate(-50%, -20px)'
+        setTimeout(() => {
+          document.body.removeChild(toast)
+        }, 300)
       }, 3000)
     },
     loadReminders() {
@@ -83,45 +104,61 @@ export const useStore = defineStore('main', {
       this.reminders = this.reminders.filter(r => r.id !== id)
       localStorage.setItem('reminders', JSON.stringify(this.reminders))
     },
-    startReminderTimer(reminder: { id: string; title: string; datetimeIso: string; delivered: boolean }) {
+    async startReminderTimer(reminder: { id: string; title: string; datetimeIso: string; delivered: boolean }) {
       const reminderTime = new Date(reminder.datetimeIso).getTime()
       const now = Date.now()
       const delay = reminderTime - now
-      
+
       if (delay > 0) {
         setTimeout(async () => {
           try {
-            // Use Tauri notification
-            let permissionGranted = await isPermissionGranted()
-            
-            if (!permissionGranted) {
-              const permission = await requestPermission()
-              permissionGranted = permission === 'granted'
-            }
-            
-            if (permissionGranted) {
-              await sendNotification({ 
-                title: 'یادآور', 
-                body: reminder.title 
-              })
-            } else {
-              // Fallback to browser notification
-              if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('یادآور', {
-                  body: reminder.title,
-                  icon: '/favicon.ico'
-                })
-              } else if ('Notification' in window && Notification.permission !== 'denied') {
-                const permission = await Notification.requestPermission()
-                if (permission === 'granted') {
-                  new Notification('یادآور', {
+            // در Development از Browser Notification استفاده کن (آیکون درست رو نشون میده)
+            const isDev = import.meta.env.MODE === 'development'
+
+            if (isDev || !window.__TAURI__) {
+              // Browser Notification
+              if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                  new Notification('🔔 یادآور - تقویم من', {
                     body: reminder.title,
-                    icon: '/favicon.ico'
+                    icon: '/logo.png',
+                    badge: '/logo.png',
+                    tag: reminder.id,
+                    requireInteraction: true,
+                    silent: false
                   })
+                } else if (Notification.permission !== 'denied') {
+                  const permission = await Notification.requestPermission()
+                  if (permission === 'granted') {
+                    new Notification('🔔 یادآور - تقویم من', {
+                      body: reminder.title,
+                      icon: '/logo.png',
+                      badge: '/logo.png',
+                      tag: reminder.id,
+                      requireInteraction: true,
+                      silent: false
+                    })
+                  }
                 }
               }
+            } else {
+              // Tauri Notification (فقط در Production)
+              let permissionGranted = await isPermissionGranted()
+
+              if (!permissionGranted) {
+                const permission = await requestPermission()
+                permissionGranted = permission === 'granted'
+              }
+
+              if (permissionGranted) {
+                await sendNotification({
+                  title: '🔔 یادآور - تقویم من',
+                  body: reminder.title,
+                  icon: 'icons/icon.png'
+                })
+              }
             }
-            
+
             // Mark as delivered
             const idx = this.reminders.findIndex(r => r.id === reminder.id)
             if (idx >= 0) {

@@ -19,8 +19,8 @@ type CalendarKind = 'gregorian' | 'jalali' | 'islamic'
 // نام روزهای هفته - از دوشنبه تا یکشنبه برای میلادی، از شنبه تا جمعه برای فارسی
 const weekDays = {
   gregorian: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  jalali: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'],
-  islamic: ['السَبت', 'الأحد', 'الإثنَیْن', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'] // شنبه تا جمعه
+  jalali: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
+  islamic: ['س', 'ا', 'ث', 'ث', 'ا', 'خ', 'ج'] // شنبه تا جمعه
 }
 
 const jalaliMonthNames = [
@@ -66,7 +66,7 @@ const equivalents = computed(() => {
   const mGreg = new Date(date)
   const mJal = momentJalaali(date)
   const mHij = momentHijri(date)
-  
+
   return {
     gregorian: mGreg.toISOString().split('T')[0],
     jalali: mJal.format('jYYYY-jMM-jDD'),
@@ -95,53 +95,53 @@ const monthDays = computed(() => {
     // تقویم میلادی
     const firstDay = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth(), 1)
     const lastDay = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 0)
-    
+
     // روز اول ماه چه روزی از هفته است (0=یکشنبه تا 6=شنبه)
     // ما میخوایم از دوشنبه شروع کنیم، پس باید تبدیل کنیم
     let startDay = firstDay.getDay() - 1 // دوشنبه = 0
     if (startDay < 0) startDay = 6 // اگر یکشنبه بود، میشه 6
-    
+
     // روزهای ماه قبل
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = new Date(firstDay)
       prevDay.setDate(prevDay.getDate() - (i + 1))
-      days.push({ 
-        date: prevDay, 
+      days.push({
+        date: prevDay,
         isCurrentMonth: false,
         displayDay: prevDay.getDate()
       })
     }
-    
+
     // روزهای ماه جاری
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const day = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth(), i)
-      days.push({ 
-        date: day, 
+      days.push({
+        date: day,
         isCurrentMonth: true,
         displayDay: i
       })
     }
-    
+
     // روزهای ماه بعد
     const remainingDays = 42 - days.length
     for (let i = 1; i <= remainingDays; i++) {
       const nextDay = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, i)
-      days.push({ 
-        date: nextDay, 
+      days.push({
+        date: nextDay,
         isCurrentMonth: false,
         displayDay: i
       })
     }
-    
+
   } else if (selectedCalendar.value === 'jalali') {
     // تقویم جلالی
     const jCurrent = momentJalaali(currentMonth.value)
     const jYear = jCurrent.jYear()
     const jMonth = jCurrent.jMonth()
-    
+
     // اولین روز ماه جلالی - روش دیگر
     const firstDay = momentJalaali(currentMonth.value).jDate(1)
-    
+
     // دریافت تعداد روزهای ماه
     let daysInMonth: number
     if (jMonth < 6) {
@@ -153,89 +153,89 @@ const monthDays = computed(() => {
       const isLeap = momentJalaali.jIsLeapYear(jYear)
       daysInMonth = isLeap ? 30 : 29
     }
-    
+
     // روز اول ماه چه روزی از هفته است
     // 0=یکشنبه تا 6=شنبه در JS، ما میخوایم شنبه=0
     let startDay = (firstDay.day() + 1) % 7 // شنبه = 0
-    
+
     // روزهای ماه قبل
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = firstDay.clone().subtract(i + 1, 'days')
-      days.push({ 
-        date: prevDay.toDate(), 
+      days.push({
+        date: prevDay.toDate(),
         isCurrentMonth: false,
         displayDay: prevDay.jDate()
       })
     }
-    
+
     // روزهای ماه جاری
     for (let i = 1; i <= daysInMonth; i++) {
       const day = momentJalaali(currentMonth.value).jYear(jYear).jMonth(jMonth).jDate(i)
-      days.push({ 
-        date: day.toDate(), 
+      days.push({
+        date: day.toDate(),
         isCurrentMonth: true,
         displayDay: i
       })
     }
-    
+
     // روزهای ماه بعد
     const remainingDays = 42 - days.length
     for (let i = 1; i <= remainingDays; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
-      days.push({ 
-        date: nextDay.toDate(), 
+      days.push({
+        date: nextDay.toDate(),
         isCurrentMonth: false,
         displayDay: nextDay.jDate()
       })
     }
-    
+
   } else if (selectedCalendar.value === 'islamic') {
     // تقویم قمری
     const iCurrent = momentHijri(currentMonth.value)
     const iYear = iCurrent.iYear()
     const iMonth = iCurrent.iMonth()
-    
+
     // اولین روز ماه هجری
     const firstDay = momentHijri()
     firstDay.iYear(iYear)
     firstDay.iMonth(iMonth)
     firstDay.iDate(1)
-    
+
     const daysInMonth = firstDay.iDaysInMonth()
-    
+
     // روز اول ماه چه روزی از هفته است
     // 0=یکشنبه تا 6=شنبه، ما میخوایم شنبه=0
     let startDay = (firstDay.day() + 1) % 7
-    
+
     // روزهای ماه قبل
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = firstDay.clone().subtract(i + 1, 'days')
-      days.push({ 
-        date: prevDay.toDate(), 
+      days.push({
+        date: prevDay.toDate(),
         isCurrentMonth: false,
         displayDay: prevDay.iDate()
       })
     }
-    
+
     // روزهای ماه جاری
     for (let i = 1; i <= daysInMonth; i++) {
       const day = momentHijri()
       day.iYear(iYear)
       day.iMonth(iMonth)
       day.iDate(i)
-      days.push({ 
-        date: day.toDate(), 
+      days.push({
+        date: day.toDate(),
         isCurrentMonth: true,
         displayDay: i
       })
     }
-    
+
     // روزهای ماه بعد
     const remainingDays = 42 - days.length
     for (let i = 1; i <= remainingDays; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
-      days.push({ 
-        date: nextDay.toDate(), 
+      days.push({
+        date: nextDay.toDate(),
         isCurrentMonth: false,
         displayDay: nextDay.iDate()
       })
@@ -251,12 +251,12 @@ function changeMonth(direction: number) {
     const newDate = new Date(currentMonth.value)
     newDate.setMonth(newDate.getMonth() + direction)
     currentMonth.value = newDate
-    
+
   } else if (selectedCalendar.value === 'jalali') {
     const jDate = momentJalaali(currentMonth.value)
     jDate.add(direction, 'jMonth')
     currentMonth.value = jDate.toDate()
-    
+
   } else if (selectedCalendar.value === 'islamic') {
     const iDate = momentHijri(currentMonth.value)
     iDate.add(direction, 'iMonth')
@@ -292,25 +292,24 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
 </script>
 
 <template>
-  <div 
-    class="flex flex-col gap-4 w-full max-w-4xl" 
-    :dir="isRTL ? 'rtl' : 'ltr'"
+  <div
+    class="flex flex-col gap-6 w-full"
   >
     <!-- انتخاب نوع تقویم -->
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-medium">نوع تقویم:</label>
-        <select 
-          v-model="selectedCalendar" 
-          class="border rounded px-3 py-1 bg-transparent"
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">نوع تقویم:</label>
+        <select
+          v-model="selectedCalendar"
+          class="border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 bg-white dark:bg-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 outline-none transition-all duration-200 font-medium"
         >
           <option v-for="c in calendars" :key="c.key" :value="c.key">
             {{ c.label }}
           </option>
         </select>
       </div>
-      <button 
-        class="text-sm underline hover:text-blue-600"
+      <button
+        class="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
         @click="onToday"
       >
         امروز
@@ -318,31 +317,31 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
     </div>
 
     <!-- نمایش تقویم -->
-    <div class="border rounded-lg p-4">
+    <div class="border rounded-lg p-4" :dir="isRTL ? 'rtl' : 'ltr'">
       <!-- هدر ماه -->
       <div class="flex items-center justify-between mb-4">
-        <button 
-          @click="changeMonth(isRTL ? 1 : -1)"
+        <button
+          @click="changeMonth(-1)"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
         >
-          {{ isRTL ? '›' : '‹' }}
+          <
         </button>
         <h3 class="text-lg font-semibold">
           {{ monthYearDisplay }}
         </h3>
-        <button 
-          @click="changeMonth(isRTL ? -1 : 1)"
+        <button
+          @click="changeMonth(1)"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
         >
-          {{ isRTL ? '‹' : '›' }}
+          >
         </button>
       </div>
 
       <!-- نام روزهای هفته -->
       <div class="grid grid-cols-7 gap-1 mb-2">
-        <div 
-          v-for="(day, i) in weekDays[selectedCalendar]" 
-          :key="i" 
+        <div
+          v-for="(day, i) in weekDays[selectedCalendar]"
+          :key="i"
           class="text-center text-sm font-medium text-gray-500 py-2"
         >
           {{ day }}
