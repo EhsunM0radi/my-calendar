@@ -32,14 +32,14 @@ async function createReminder() {
 </script>
 
 <template>
-  <div class="w-full max-w-xl border rounded p-3 flex flex-col gap-2">
-    <div class="text-sm font-medium">ایجاد یادآور</div>
-    <input v-model="title" class="border rounded px-2 py-1 bg-transparent" placeholder="عنوان" />
+  <div class="w-full max-w-xl border rounded p-3 flex flex-col gap-2 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+    <div class="text-sm font-medium dark:text-gray-200">ایجاد یادآور</div>
+    <input v-model="title" class="border rounded px-2 py-1 bg-transparent dark:border-gray-600 dark:text-gray-200" placeholder="عنوان" />
     <div class="flex gap-2">
-      <input v-model="time" type="time" class="border rounded px-2 py-1 bg-transparent flex-1" placeholder="زمان" />
+      <input v-model="time" type="time" class="border rounded px-2 py-1 bg-transparent flex-1 dark:border-gray-600 dark:text-gray-200" placeholder="زمان" />
     </div>
     <button class="px-3 py-2 rounded bg-black text-white dark:bg-white dark:text-black" @click="createReminder">ذخیره</button>
-    <div class="text-xs opacity-70">یادآور در زمان مشخص شده ارسال می‌شود.</div>
+    <div class="text-xs opacity-70 dark:text-gray-400">یادآور در زمان مشخص شده ارسال می‌شود.</div>
   </div>
 </template>
 

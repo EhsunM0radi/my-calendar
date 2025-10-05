@@ -15,7 +15,7 @@ function selectTheme(theme: 'light' | 'dark') {
   <div class="space-y-6">
     <!-- Theme Settings -->
     <div>
-      <h3 class="text-lg font-semibold mb-4">تم پیش‌فرض</h3>
+      <h3 class="text-lg font-semibold mb-4 dark:text-gray-200">تم پیش‌فرض</h3>
       <div class="grid grid-cols-2 gap-3">
         <button
           v-for="theme in themes"
@@ -29,7 +29,7 @@ function selectTheme(theme: 'light' | 'dark') {
           ]"
         >
           <span class="text-4xl">{{ theme.icon }}</span>
-          <span class="font-medium">{{ theme.label }}</span>
+          <span class="font-medium dark:text-gray-300">{{ theme.label }}</span>
           <div
             v-if="store.theme === theme.value"
             class="w-2 h-2 bg-blue-500 rounded-full"
@@ -41,8 +41,8 @@ function selectTheme(theme: 'light' | 'dark') {
     <!-- App Info -->
     <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
       <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-        <span>نسخه برنامه</span>
-        <span class="font-mono">{{ store.version }}</span>
+        <span class="dark:text-gray-300">نسخه برنامه</span>
+        <span class="font-mono dark:text-gray-300">{{ store.version }}</span>
       </div>
     </div>
   </div>

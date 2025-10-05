@@ -19,8 +19,8 @@ type CalendarKind = 'gregorian' | 'jalali' | 'islamic'
 // نام روزهای هفته - از دوشنبه تا یکشنبه برای میلادی، از شنبه تا جمعه برای فارسی
 const weekDays = {
   gregorian: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  jalali: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
-  islamic: ['س', 'ا', 'ث', 'ث', 'ا', 'خ', 'ج'] // شنبه تا جمعه
+  jalali: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'],
+  islamic: ['السبت', 'الاحد', 'الاثنين', 'الثلاثاء', 'الاربعاء', 'الخميس', 'الجمعة'] // شنبه تا جمعه
 }
 
 const jalaliMonthNames = [
@@ -317,7 +317,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
     </div>
 
     <!-- نمایش تقویم -->
-    <div class="border rounded-lg p-4" :dir="isRTL ? 'rtl' : 'ltr'">
+    <div class="border rounded-lg p-4 dark:border-gray-700 dark:bg-gray-800" :dir="isRTL ? 'rtl' : 'ltr'">
       <!-- هدر ماه -->
       <div class="flex items-center justify-between mb-4">
         <button
@@ -342,7 +342,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
         <div
           v-for="(day, i) in weekDays[selectedCalendar]"
           :key="i"
-          class="text-center text-sm font-medium text-gray-500 py-2"
+          class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 py-2"
         >
           {{ day }}
         </div>
@@ -368,7 +368,7 @@ const isRTL = computed(() => selectedCalendar.value !== 'gregorian')
     </div>
 
     <!-- نمایش تاریخ‌های معادل -->
-    <div class="rounded border p-3 text-sm">
+    <div class="rounded border p-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
       <div class="grid grid-cols-1 gap-2">
         <div class="flex justify-between">
           <span class="font-medium">میلادی:</span>
