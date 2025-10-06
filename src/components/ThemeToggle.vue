@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const store = useStore()
 function toggle() {
-  store.setTheme(store.theme === 'dark' ? 'light' : 'dark')
+  store.setToggleTheme(store.toggleTheme === 'dark' ? 'light' : 'dark')
 }
 </script>
 
@@ -12,7 +12,7 @@ function toggle() {
   >
     <div class="relative z-10">
       <Transition name="icon" mode="out-in">
-        <span v-if="store.theme === 'dark'" key="moon" class="block text-xl">🌙</span>
+        <span v-if="store.toggleTheme === 'dark'" key="moon" class="block text-xl">🌙</span>
         <span v-else key="sun" class="block text-xl">☀️</span>
       </Transition>
     </div>

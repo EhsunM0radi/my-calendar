@@ -7,7 +7,7 @@ const themes = [
 ]
 
 function selectTheme(theme: 'light' | 'dark') {
-  store.setTheme(theme)
+  store.setDefaultTheme(theme)
 }
 </script>
 
@@ -23,7 +23,7 @@ function selectTheme(theme: 'light' | 'dark') {
           @click="selectTheme(theme.value as 'light' | 'dark')"
           :class="[
             'flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-300',
-            store.theme === theme.value
+            store.defaultTheme === theme.value
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg scale-105'
               : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md'
           ]"
@@ -31,7 +31,7 @@ function selectTheme(theme: 'light' | 'dark') {
           <span class="text-4xl">{{ theme.icon }}</span>
           <span class="font-medium dark:text-gray-300">{{ theme.label }}</span>
           <div
-            v-if="store.theme === theme.value"
+            v-if="store.defaultTheme === theme.value"
             class="w-2 h-2 bg-blue-500 rounded-full"
           ></div>
         </button>

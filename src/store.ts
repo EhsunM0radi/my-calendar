@@ -11,22 +11,37 @@ export const useStore = defineStore('main', {
     version: versionString,
     isInitialized: false,
     name: '',
-    theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+    // مدیریت سه لایه تم
+    theme: 'light' as 'light' | 'dark', // تم اصلی که همه جا استفاده میشه
+    toggleTheme: null as 'light' | 'dark' | null, // تم تاگل (سشن - موقت)
+    defaultTheme: (localStorage.getItem('defaultTheme') as 'light' | 'dark') || 'light', // تم دیفالت (دائمی)
     selectedDateIso: new Date().toISOString(),
     selectedCalendar: (localStorage.getItem('selectedCalendar') as 'gregorian' | 'jalali' | 'islamic') || 'jalali',
     reminders: [] as Array<{ id: string; title: string; datetimeIso: string; delivered: boolean }>,
+    inAppNotifications: [] as Array<{ id: string; title: string; message: string; time: Date; type: 'reminder' | 'missed' }>,
   }),
 
   actions: {
     initApp() {
       this.isInitialized = true
+      // محاسبه تم اصلی بر اساس اولویت
+      this.updateMainTheme()
       console.log('app initialized!')
     },
-    setTheme(next: 'light' | 'dark') {
-      this.theme = next
-      localStorage.setItem('theme', next)
+
+    // محاسبه و اعمال تم اصلی بر اساس اولویت: toggleTheme > defaultTheme
+    updateMainTheme() {
+      const finalTheme = this.toggleTheme ?? this.defaultTheme
+      if (this.theme !== finalTheme) {
+        this.theme = finalTheme
+        this.applyThemeToDOM(finalTheme)
+      }
+    },
+
+    // اعمال تم به DOM
+    applyThemeToDOM(themeValue: 'light' | 'dark') {
       const root = document.documentElement
-      if (next === 'dark') {
+      if (themeValue === 'dark') {
         root.classList.add('dark')
         root.style.colorScheme = 'dark'
       } else {
@@ -34,6 +49,25 @@ export const useStore = defineStore('main', {
         root.style.colorScheme = 'light'
       }
     },
+
+    // تنظیم تم تاگل (موقت - سشن)
+    setToggleTheme(next: 'light' | 'dark' | null) {
+      this.toggleTheme = next
+      this.updateMainTheme()
+    },
+
+    // تنظیم تم دیفالت (دائمی - localStorage)
+    setDefaultTheme(next: 'light' | 'dark') {
+      this.defaultTheme = next
+      localStorage.setItem('defaultTheme', next)
+      this.updateMainTheme()
+    },
+
+    // برای سازگاری با کدهای قبلی (deprecated - از setToggleTheme یا setDefaultTheme استفاده کن)
+    setTheme(next: 'light' | 'dark') {
+      this.setToggleTheme(next)
+    },
+
     setSelectedDate(iso: string) {
       this.selectedDateIso = iso
     },
@@ -87,13 +121,107 @@ export const useStore = defineStore('main', {
         }, 300)
       }, 3000)
     },
+
+    // نوتیفیکیشن درون‌برنامه‌ای
+    showInAppNotification(title: string, message: string, type: 'reminder' | 'missed' = 'reminder') {
+      const notification = {
+        id: crypto.randomUUID(),
+        title,
+        message,
+        time: new Date(),
+        type
+      }
+
+      this.inAppNotifications.unshift(notification)
+
+      // محدود کردن به 50 نوتیف آخر
+      if (this.inAppNotifications.length > 50) {
+        this.inAppNotifications = this.inAppNotifications.slice(0, 50)
+      }
+
+      // پخش صدا
+      this.playNotificationSound()
+
+      // نمایش نوتیف به صورت Toast
+      this.showNotificationToast(notification)
+    },
+
+    playNotificationSound() {
+      try {
+        // ایجاد صدای نوتیفیکیشن با Web Audio API
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillator.frequency.value = 800
+        oscillator.type = 'sine'
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.5)
+      } catch (error) {
+        console.error('Failed to play notification sound:', error)
+      }
+    },
+
+    showNotificationToast(notification: { title: string; message: string; type: 'reminder' | 'missed' }) {
+      const toast = document.createElement('div')
+      const bgColor = notification.type === 'missed'
+        ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+        : 'bg-gradient-to-r from-blue-500 to-cyan-500'
+
+      toast.className = `fixed top-4 right-4 px-6 py-4 rounded-2xl text-white z-[9999] shadow-2xl backdrop-blur-sm transition-all duration-300 ${bgColor} max-w-sm`
+
+      const icon = notification.type === 'missed' ? '⏰' : '🔔'
+      toast.innerHTML = `
+        <div class="flex items-start gap-3">
+          <span class="text-3xl">${icon}</span>
+          <div class="flex-1">
+            <div class="font-bold text-lg mb-1">${notification.title}</div>
+            <div class="text-sm opacity-90">${notification.message}</div>
+          </div>
+        </div>
+      `
+
+      document.body.appendChild(toast)
+
+      // Animate in
+      setTimeout(() => {
+        toast.style.transform = 'translateX(0)'
+      }, 10)
+
+      // Animate out and remove
+      setTimeout(() => {
+        toast.style.opacity = '0'
+        toast.style.transform = 'translateX(100%)'
+        setTimeout(() => {
+          if (document.body.contains(toast)) {
+            document.body.removeChild(toast)
+          }
+        }, 300)
+      }, 5000)
+    },
+
+    clearInAppNotification(id: string) {
+      this.inAppNotifications = this.inAppNotifications.filter(n => n.id !== id)
+    },
+
+    clearAllInAppNotifications() {
+      this.inAppNotifications = []
+    },
+
     loadReminders() {
       const raw = localStorage.getItem('reminders')
       if (raw) {
         try {
           this.reminders = JSON.parse(raw)
 
-          // پاک کردن یادآورهای ارسال شده که بیش از یک ماه از آنها گذشته
+          // پاک کردن یادآورهای ارسال شده که بیش از 3 روز از آنها گذشته
           this.cleanupOldReminders()
 
           // بررسی یادآورهای گذشته و ارسال نوتیف برای آنها
@@ -113,14 +241,14 @@ export const useStore = defineStore('main', {
       localStorage.setItem('reminders', JSON.stringify(this.reminders))
     },
     cleanupOldReminders() {
-      const oneMonthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000) // 30 روز قبل
+      const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000) // 3 روز قبل
 
       const before = this.reminders.length
       this.reminders = this.reminders.filter(reminder => {
-        // فقط یادآورهای ارسال شده که بیش از یک ماه از آنها گذشته را حذف کن
+        // فقط یادآورهای ارسال شده که بیش از 3 روز از آنها گذشته را حذف کن
         if (reminder.delivered) {
           const reminderTime = new Date(reminder.datetimeIso).getTime()
-          return reminderTime > oneMonthAgo
+          return reminderTime > threeDaysAgo
         }
         return true // یادآورهای ارسال نشده را نگه دار
       })
@@ -170,43 +298,31 @@ export const useStore = defineStore('main', {
 
         const notificationBody = `⏰ ${timeAgoText}\n${reminder.title}`
 
+        // نوتیف درون‌برنامه‌ای
+        this.showInAppNotification(
+          'یادآور از دست رفته',
+          `${timeAgoText}: ${reminder.title}`,
+          'missed'
+        )
+
         const isDev = import.meta.env.MODE === 'development'
 
+        // ارسال نوتیف سیستمی (اختیاری)
         if (isDev || !window.__TAURI__) {
           // Browser Notification
-          if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-              new Notification('🔔 یادآور از دست رفته - تقویم من', {
-                body: notificationBody,
-                icon: '/logo.png',
-                badge: '/logo.png',
-                tag: reminder.id,
-                requireInteraction: true,
-                silent: false
-              })
-            } else if (Notification.permission !== 'denied') {
-              const permission = await Notification.requestPermission()
-              if (permission === 'granted') {
-                new Notification('🔔 یادآور از دست رفته - تقویم من', {
-                  body: notificationBody,
-                  icon: '/logo.png',
-                  badge: '/logo.png',
-                  tag: reminder.id,
-                  requireInteraction: true,
-                  silent: false
-                })
-              }
-            }
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('🔔 یادآور از دست رفته - تقویم من', {
+              body: notificationBody,
+              icon: '/logo.png',
+              badge: '/logo.png',
+              tag: reminder.id,
+              requireInteraction: true,
+              silent: false
+            })
           }
         } else {
           // Tauri Notification
-          let permissionGranted = await isPermissionGranted()
-
-          if (!permissionGranted) {
-            const permission = await requestPermission()
-            permissionGranted = permission === 'granted'
-          }
-
+          const permissionGranted = await isPermissionGranted()
           if (permissionGranted) {
             await sendNotification({
               title: '🔔 یادآور از دست رفته - تقویم من',
@@ -234,6 +350,13 @@ export const useStore = defineStore('main', {
       if (delay > 0) {
         setTimeout(async () => {
           try {
+            // نوتیف درون‌برنامه‌ای
+            this.showInAppNotification(
+              'یادآور',
+              reminder.title,
+              'reminder'
+            )
+
             // در Development از Browser Notification استفاده کن (آیکون درست رو نشون میده)
             const isDev = import.meta.env.MODE === 'development'
 
@@ -305,6 +428,11 @@ export const useStore = defineStore('main', {
         return `Greetings from Pinia store, ${state.name}!`
       }
       return ''
+    },
+
+    // دریافت تعداد نوتیف‌های خوانده نشده
+    unreadNotificationsCount: (state) => {
+      return state.inAppNotifications.length
     },
   },
 })
