@@ -1,5 +1,4 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { invoke } from '@tauri-apps/api/core'
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification'
 
 const versionString =
@@ -179,7 +178,7 @@ export const useStore = defineStore('main', {
 
       const icon = notification.type === 'missed' ? '⏰' : '🔔'
       toast.innerHTML = `
-        <div class="flex items-start gap-3">
+        <div dir="rtl" class="flex items-start gap-3">
           <span class="text-3xl">${icon}</span>
           <div class="flex-1">
             <div class="font-bold text-lg mb-1">${notification.title}</div>
