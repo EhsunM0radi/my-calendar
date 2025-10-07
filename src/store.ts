@@ -37,9 +37,13 @@ export const useStore = defineStore('main', {
       }
     },
 
-    // اعمال تم به DOM
+    // اعمال تم به DOM با جلوگیری از FOUC
     applyThemeToDOM(themeValue: 'light' | 'dark') {
       const root = document.documentElement
+
+      // غیرفعال کردن موقت transitions
+      root.classList.add('theme-transitioning')
+
       if (themeValue === 'dark') {
         root.classList.add('dark')
         root.style.colorScheme = 'dark'
@@ -47,6 +51,14 @@ export const useStore = defineStore('main', {
         root.classList.remove('dark')
         root.style.colorScheme = 'light'
       }
+
+      // فعال کردن مجدد transitions بعد از دو فریم
+      // (یک فریم کافی نیست، دو فریم اطمینان می‌دهد که DOM کامل آپدیت شده)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          root.classList.remove('theme-transitioning')
+        })
+      })
     },
 
     // تنظیم تم تاگل (موقت - سشن)

@@ -21,12 +21,21 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
 }
 
 /* Remove conflicting background and text colors */
 html,
 body {
   @apply m-0 p-0;
+}
+
+/* جلوگیری از transition در هنگام لود اولیه */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: none !important;
 }
 
 a,
