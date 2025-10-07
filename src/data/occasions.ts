@@ -538,6 +538,34 @@ export function isHoliday(
   return occasions.some(occ => occ.isHoliday)
 }
 
+// تابع بررسی تعطیل بودن با در نظر گرفتن تاریخ قمری برای جلالی
+export function isHolidayWithIslamic(
+  jalaliMonth: number,
+  jalaliDay: number,
+  islamicMonth: number,
+  islamicDay: number,
+  dayOfWeek: number
+): boolean {
+  // جمعه‌ها تعطیل است
+  if (dayOfWeek === 5) {
+    return true
+  }
+
+  // تعطیلات ملی جلالی
+  const jalaliOccasions = getOccasions('jalali', jalaliMonth, jalaliDay)
+  if (jalaliOccasions.some(occ => occ.isHoliday)) {
+    return true
+  }
+
+  // تعطیلات مذهبی قمری
+  const islamicOccasions = getOccasions('islamic', islamicMonth, islamicDay)
+  if (islamicOccasions.some(occ => occ.isHoliday)) {
+    return true
+  }
+
+  return false
+}
+
 // تابع دریافت تمام مناسبت‌های یک تاریخ میلادی (از هر سه تقویم)
 export function getAllOccasionsForDate(
   gregorianDate: Date,

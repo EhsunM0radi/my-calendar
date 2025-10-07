@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import momentJalaali from 'moment-jalaali'
 import momentHijri from 'moment-hijri'
-import { isHoliday } from '@/data/occasions'
+import { isHoliday, isHolidayWithIslamic } from '@/data/occasions'
 
 // تنظیم لوکال فارسی
 momentJalaali.loadPersian({ usePersianDigits: false })
@@ -158,22 +158,24 @@ const monthDays = computed(() => {
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = firstDay.clone().subtract(i + 1, 'days')
       const prevJDate = momentJalaali(prevDay.toDate())
+      const prevIDate = momentHijri(prevDay.toDate())
       days.push({
         date: prevDay.toDate(),
         isCurrentMonth: false,
         displayDay: convertToPersianDigits(prevDay.jDate()),
-        isHoliday: isHoliday('jalali', prevJDate.jMonth() + 1, prevJDate.jDate(), prevDay.day())
+        isHoliday: isHolidayWithIslamic(prevJDate.jMonth() + 1, prevJDate.jDate(), prevIDate.iMonth() + 1, prevIDate.iDate(), prevDay.day())
       })
     }
 
     // روزهای ماه جاری
     for (let i = 1; i <= daysInMonth; i++) {
       const day = momentJalaali(currentMonth.value).jYear(jYear).jMonth(jMonth).jDate(i)
+      const iDate = momentHijri(day.toDate())
       days.push({
         date: day.toDate(),
         isCurrentMonth: true,
         displayDay: convertToPersianDigits(i),
-        isHoliday: isHoliday('jalali', jMonth + 1, i, day.day())
+        isHoliday: isHolidayWithIslamic(jMonth + 1, i, iDate.iMonth() + 1, iDate.iDate(), day.day())
       })
     }
 
@@ -183,11 +185,12 @@ const monthDays = computed(() => {
     for (let i = 1; i <= remainingDaysJalali; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
       const nextJDate = momentJalaali(nextDay.toDate())
+      const nextIDate = momentHijri(nextDay.toDate())
       days.push({
         date: nextDay.toDate(),
         isCurrentMonth: false,
         displayDay: convertToPersianDigits(nextDay.jDate()),
-        isHoliday: isHoliday('jalali', nextJDate.jMonth() + 1, nextJDate.jDate(), nextDay.day())
+        isHoliday: isHolidayWithIslamic(nextJDate.jMonth() + 1, nextJDate.jDate(), nextIDate.iMonth() + 1, nextIDate.iDate(), nextDay.day())
       })
     }
 
