@@ -1,11 +1,11 @@
 import { devtools } from '@vue/devtools'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
-import App from './App.vue'
 import './assets/main.css'
+import App from './App.vue'
 
 // اعمال تم قبل از رندر Vue برای جلوگیری از FOUC
-;(function initTheme() {
+(function initTheme() {
   try {
     const savedTheme = localStorage.getItem('theme')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -29,7 +29,7 @@ import './assets/main.css'
   } catch (error) {
     console.error('Failed to initialize theme:', error)
   }
-})()
+})();
 
 if (process.env.NODE_ENV === 'development') {
   devtools.connect('http://localhost', 8098)
