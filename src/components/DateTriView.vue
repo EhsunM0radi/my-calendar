@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import momentJalaali from 'moment-jalaali'
 import momentHijri from 'moment-hijri'
+import { isHoliday } from '@/data/occasions'
 
 // تنظیم لوکال فارسی
 momentJalaali.loadPersian({ usePersianDigits: false })
@@ -65,20 +66,6 @@ watch(() => selectedDate.value, (newDate) => {
   currentMonth.value = new Date(newDate)
 })
 
-// محاسبه تاریخ‌های معادل
-// const equivalents = computed(() => {
-//   const date = new Date(selectedDate.value)
-//   const mGreg = new Date(date)
-//   const mJal = momentJalaali(date)
-//   const mHij = momentHijri(date)
-
-//   return {
-//     gregorian: mGreg.toISOString().split('T')[0],
-//     jalali: mJal.format('jYYYY-jMM-jDD'),
-//     islamic: mHij.format('iYYYY-iMM-iDD')
-//   }
-// })
-
 // نمایش نام ماه و سال
 const monthYearDisplay = computed(() => {
   if (selectedCalendar.value === 'gregorian') {
@@ -94,7 +81,7 @@ const monthYearDisplay = computed(() => {
 
 // محاسبه روزهای ماه
 const monthDays = computed(() => {
-  const days: Array<{ date: Date; isCurrentMonth: boolean; displayDay: number }> = []
+  const days: Array<{ date: Date; isCurrentMonth: boolean; displayDay: number | string; isHoliday: boolean }> = []
 
   if (selectedCalendar.value === 'gregorian') {
     // تقویم میلادی
@@ -113,7 +100,8 @@ const monthDays = computed(() => {
       days.push({
         date: prevDay,
         isCurrentMonth: false,
-        displayDay: selectedCalendar.value === 'gregorian' ? prevDay.getDate() : convertToPersianDigits(prevDay.getDate())
+        displayDay: prevDay.getDate(),
+        isHoliday: isHoliday('gregorian', prevDay.getMonth() + 1, prevDay.getDate(), prevDay.getDay())
       })
     }
 
@@ -123,7 +111,8 @@ const monthDays = computed(() => {
       days.push({
         date: day,
         isCurrentMonth: true,
-        displayDay: selectedCalendar.value === 'gregorian' ? i : convertToPersianDigits(i)
+        displayDay: i,
+        isHoliday: isHoliday('gregorian', day.getMonth() + 1, i, day.getDay())
       })
     }
 
@@ -135,7 +124,8 @@ const monthDays = computed(() => {
       days.push({
         date: nextDay,
         isCurrentMonth: false,
-        displayDay: selectedCalendar.value === 'gregorian' ? i : convertToPersianDigits(i)
+        displayDay: i,
+        isHoliday: isHoliday('gregorian', nextDay.getMonth() + 1, i, nextDay.getDay())
       })
     }
 
@@ -145,7 +135,7 @@ const monthDays = computed(() => {
     const jYear = jCurrent.jYear()
     const jMonth = jCurrent.jMonth()
 
-    // اولین روز ماه جلالی - روش دیگر
+    // اولین روز ماه جلالی
     const firstDay = momentJalaali(currentMonth.value).jDate(1)
 
     // دریافت تعداد روزهای ماه
@@ -167,10 +157,12 @@ const monthDays = computed(() => {
     // روزهای ماه قبل
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = firstDay.clone().subtract(i + 1, 'days')
+      const prevJDate = momentJalaali(prevDay.toDate())
       days.push({
         date: prevDay.toDate(),
         isCurrentMonth: false,
-        displayDay: convertToPersianDigits(prevDay.jDate())
+        displayDay: convertToPersianDigits(prevDay.jDate()),
+        isHoliday: isHoliday('jalali', prevJDate.jMonth() + 1, prevJDate.jDate(), prevDay.day())
       })
     }
 
@@ -180,7 +172,8 @@ const monthDays = computed(() => {
       days.push({
         date: day.toDate(),
         isCurrentMonth: true,
-        displayDay: convertToPersianDigits(i)
+        displayDay: convertToPersianDigits(i),
+        isHoliday: isHoliday('jalali', jMonth + 1, i, day.day())
       })
     }
 
@@ -189,10 +182,12 @@ const monthDays = computed(() => {
     const remainingDaysJalali = (7 - (totalDaysJalali % 7)) % 7
     for (let i = 1; i <= remainingDaysJalali; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
+      const nextJDate = momentJalaali(nextDay.toDate())
       days.push({
         date: nextDay.toDate(),
         isCurrentMonth: false,
-        displayDay: convertToPersianDigits(nextDay.jDate())
+        displayDay: convertToPersianDigits(nextDay.jDate()),
+        isHoliday: isHoliday('jalali', nextJDate.jMonth() + 1, nextJDate.jDate(), nextDay.day())
       })
     }
 
@@ -217,10 +212,12 @@ const monthDays = computed(() => {
     // روزهای ماه قبل
     for (let i = startDay - 1; i >= 0; i--) {
       const prevDay = firstDay.clone().subtract(i + 1, 'days')
+      const prevIDate = momentHijri(prevDay.toDate())
       days.push({
         date: prevDay.toDate(),
         isCurrentMonth: false,
-        displayDay: convertToPersianDigits(prevDay.iDate())
+        displayDay: convertToPersianDigits(prevDay.iDate()),
+        isHoliday: isHoliday('islamic', prevIDate.iMonth() + 1, prevIDate.iDate(), prevDay.day())
       })
     }
 
@@ -233,7 +230,8 @@ const monthDays = computed(() => {
       days.push({
         date: day.toDate(),
         isCurrentMonth: true,
-        displayDay: convertToPersianDigits(i)
+        displayDay: convertToPersianDigits(i),
+        isHoliday: isHoliday('islamic', iMonth + 1, i, day.day())
       })
     }
 
@@ -242,10 +240,12 @@ const monthDays = computed(() => {
     const remainingDaysIslamic = (7 - (totalDaysIslamic % 7)) % 7
     for (let i = 1; i <= remainingDaysIslamic; i++) {
       const nextDay = firstDay.clone().add(daysInMonth + i - 1, 'days')
+      const nextIDate = momentHijri(nextDay.toDate())
       days.push({
         date: nextDay.toDate(),
         isCurrentMonth: false,
-        displayDay: convertToPersianDigits(nextDay.iDate())
+        displayDay: convertToPersianDigits(nextDay.iDate()),
+        isHoliday: isHoliday('islamic', nextIDate.iMonth() + 1, nextIDate.iDate(), nextDay.day())
       })
     }
   }
@@ -321,7 +321,7 @@ function convertToPersianDigits(num: number) {
               'px-4 py-2 text-sm font-medium transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-700',
               c.key === selectedCalendar
-                ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-md'
                 : 'bg-white text-gray-900 hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600',
               // Conditional border for separators
               isRTL
@@ -336,7 +336,7 @@ function convertToPersianDigits(num: number) {
         </div>
       </div>
       <button
-        class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+        class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
         @click="onToday"
       >
         امروز
@@ -383,10 +383,11 @@ function convertToPersianDigits(num: number) {
           @click="selectDay(dayObj.date)"
           :class="[
             'p-2 text-sm rounded-lg transition-colors',
-            isSelected(dayObj.date) ? 'bg-blue-500 text-white font-bold' : '',
-            isToday(dayObj.date) && !isSelected(dayObj.date) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium' : '',
+            isSelected(dayObj.date) ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-md' : '',
+            isToday(dayObj.date) && !isSelected(dayObj.date) ? 'bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 text-blue-700 dark:text-blue-300 font-medium' : '',
             !dayObj.isCurrentMonth ? 'text-gray-400' : '',
-            dayObj.isCurrentMonth && !isSelected(dayObj.date) && !isToday(dayObj.date) ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''
+            dayObj.isCurrentMonth && !isSelected(dayObj.date) && !isToday(dayObj.date) ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : '',
+            dayObj.isHoliday && !isSelected(dayObj.date) ? 'text-red-600 dark:text-red-400 font-bold' : ''
           ]"
         >
           {{ dayObj.displayDay }}

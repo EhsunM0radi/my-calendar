@@ -16,14 +16,9 @@
     "check": "cargo check --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
-    "@calidy/dayjs-calendarsystems": "^1.11.3",
-    "@tauri-apps/api": "^2.6.0",
     "@tauri-apps/plugin-notification": "~2",
-    "@tauri-apps/plugin-shell": "^2.2.2",
     "@vue/devtools": "^8.0.0",
     "dayjs": "^1.11.18",
-    "hijri-converter": "^1.1.1",
-    "jalaliday": "^3.1.1",
     "moment-hijri": "^3.0.0",
     "moment-jalaali": "^0.10.4",
     "pinia": "^3.0.3",

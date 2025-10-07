@@ -10,7 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     ConvertedDates: typeof import('./src/components/ConvertedDates.vue')['default']
     DateTriView: typeof import('./src/components/DateTriView.vue')['default']
-    GreetComponent: typeof import('./src/components/GreetComponent.vue')['default']
+    OccasionsCard: typeof import('./src/components/OccasionsCard.vue')['default']
     ReminderForm: typeof import('./src/components/ReminderForm.vue')['default']
     ReminderList: typeof import('./src/components/ReminderList.vue')['default']
     SettingsModal: typeof import('./src/components/SettingsModal.vue')['default']

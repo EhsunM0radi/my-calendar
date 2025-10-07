@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import DateTriView from '@/components/DateTriView.vue'
-import ReminderForm from '@/components/ReminderForm.vue'
-import ReminderList from '@/components/ReminderList.vue'
-import SettingsModal from '@/components/SettingsModal.vue'
 
 const store = useStore()
 store.initApp()
@@ -15,7 +10,6 @@ const showSettings = ref(false)
 
 // Request notification permission
 import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification'
-import ConvertedDates from './components/ConvertedDates.vue'
 
 async function requestNotificationPermission() {
   try {
@@ -80,8 +74,9 @@ requestNotificationPermission()
     <!-- Main Content - Responsive Grid -->
     <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Calendar View -->
-      <div class="flex justify-center items-start backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-2xl p-6 shadow-xl border border-gray-200/50 dark:border-gray-700/50">
-        <DateTriView />
+      <div class="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-2xl p-6 shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <DateTriView class="mb-4" />
+        <OccasionsCard />
       </div>
 
       <!-- Reminder Form -->
